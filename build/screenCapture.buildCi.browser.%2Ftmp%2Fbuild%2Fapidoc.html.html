@@ -1,0 +1,261 @@
+<html><head></head><body><div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a href="https://github.com/juliangruber/level-store">level-store (v3.11.0)</a>
+</h1>
+<h4>A streaming storage engine based on LevelDB.</h4>
+<div class="apidocSectionDiv"><a href="#apidoc.tableOfContents" id="apidoc.tableOfContents"><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.level-store">module level-store</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.level-store.level-store">
+            function <span class="apidocSignatureSpan"></span>level-store
+            <span class="apidocSignatureSpan">(db, opts)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">object <span class="apidocSignatureSpan">level-store.</span>indexes</span>
+
+        </li>
+
+        <li>
+
+            <span class="apidocSignatureSpan">object <span class="apidocSignatureSpan">level-store.</span>util</span>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.level-store.indexes">module level-store.indexes</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.level-store.indexes.chunks">
+            function <span class="apidocSignatureSpan">level-store.indexes.</span>chunks
+            <span class="apidocSignatureSpan">(db, key)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.level-store.indexes.timestamp">
+            function <span class="apidocSignatureSpan">level-store.indexes.</span>timestamp
+            <span class="apidocSignatureSpan">(db, key)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.level-store.util">module level-store.util</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.level-store.util.padHex">
+            function <span class="apidocSignatureSpan">level-store.util.</span>padHex
+            <span class="apidocSignatureSpan">(num)</span>
+            </a>
+
+        </li>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.level-store.util.unpadHex">
+            function <span class="apidocSignatureSpan">level-store.util.</span>unpadHex
+            <span class="apidocSignatureSpan">(numstr)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.level-store" id="apidoc.module.level-store">module level-store</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.level-store.level-store" id="apidoc.element.level-store.level-store">
+        function <span class="apidocSignatureSpan"></span>level-store
+        <span class="apidocSignatureSpan">(db, opts)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">function Store(db, opts) {
+  if (!(this instanceof Store)) return new Store(db, opts);
+  this.db = db;
+  this.index = (opts || {}).index || 'timestamp';
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.level-store.indexes" id="apidoc.module.level-store.indexes">module level-store.indexes</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.level-store.indexes.chunks" id="apidoc.element.level-store.indexes.chunks">
+        function <span class="apidocSignatureSpan">level-store.indexes.</span>chunks
+        <span class="apidocSignatureSpan">(db, key)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">chunks = function (db, key) {
+  var idx = {};
+  var chunks = 0;
+
+  idx.newKey = function () {
+    return key + ' ' + padHex(chunks++);
+  };
+
+  idx.modKey = padHex;
+
+  idx.initialize = function (cb) {
+    peek.last(db, {
+      reverse : true,
+      start : key + ' ',
+      end : key + '~'
+    }, function (err, lastKey) {
+      if (!err) chunks = unpadHex(lastKey.substr(key.length + 1));
+      cb(null);
+    });
+  }
+
+  idx.parseIndex = function (chunk) {
+    return {
+      index: unpadHex(chunk.index),
+      data: chunk.data
+    };
+  }
+
+  return idx;
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.level-store.indexes.timestamp" id="apidoc.element.level-store.indexes.timestamp">
+        function <span class="apidocSignatureSpan">level-store.indexes.</span>timestamp
+        <span class="apidocSignatureSpan">(db, key)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">timestamp = function (db, key) {
+  var idx = {};
+  idx.newKey = function () {
+    return key + ' ' + timestamp();
+  }
+  return idx;
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.level-store.util" id="apidoc.module.level-store.util">module level-store.util</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.level-store.util.padHex" id="apidoc.element.level-store.util.padHex">
+        function <span class="apidocSignatureSpan">level-store.util.</span>padHex
+        <span class="apidocSignatureSpan">(num)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">padHex = function (num) {
+  if(num !== ~~(num)) throw new Error('must be whole number');
+  var str = num.toString(16);
+  return zeros.substring(str.length) + str;
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+
+    <h2>
+        <a href="#apidoc.element.level-store.util.unpadHex" id="apidoc.element.level-store.util.unpadHex">
+        function <span class="apidocSignatureSpan">level-store.util.</span>unpadHex
+        <span class="apidocSignatureSpan">(numstr)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">unpadHex = function (numstr) {
+  return parseInt(/0+([0-9a-f]+)/.exec(numstr)[1], 16);
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
+</body></html>
